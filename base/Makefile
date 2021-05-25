@@ -1,7 +1,7 @@
 SHELL       := /bin/sh
-IMAGE       := base
+IMAGE       := node
 REPOSITORY  := psmwareltd
-VERSION     := 3.9.5
+VERSION     := lts
 
 ### Executables
 DOCKER := docker

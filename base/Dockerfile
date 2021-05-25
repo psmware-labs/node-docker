@@ -11,57 +11,38 @@
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU Affero General Public License for more details.
-FROM python:3.9-slim
+FROM node:lts-alpine
 LABEL author="Pat McLean" \
       maintainer="Pat McLean<github@psmware.ie>"
 # Avoid warnings by switching to noninteractive
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Setting up user access
+## Setting up user access
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
-
-RUN apt-get update && apt-get install --no-install-recommends -y \
+RUN apk --no-cache upgrade && apk add --no-cache --virtual .build-deps \
     git \
     gnupg \
+    less \
     zsh \
+    zip \
     curl \
     vim \
-    openssh-client \
-    sudo \
-    xz-utils \
-    net-tools
-
-WORKDIR /app
-RUN echo "===> Creating Python Packages tools user and group..." \
-    && groupadd --gid $USER_GID $USERNAME \
-    && useradd -s /bin/zsh --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    && chown -fR $USERNAME:$USERNAME /app
+    shadow \
+    openssh-client..
+RUN echo "===> Moving node user and group..." \
+    && groupmod -g 1001 node \
+    && usermod -u 1001 node
+RUN echo "===> Creating development user and group..." \
+    && addgroup -g $USER_GID $USERNAME \
+    && adduser -D -s /bin/zsh -G $USERNAME -u $USER_UID $USERNAME \
+    # Add sudo support for non-root user
+    && apk add sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME \
+    && mkdir -p /app
 USER ${USERNAME}
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
-RUN echo "===> Setting up development user shell..."
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
     && touch /home/$USERNAME/.z
-COPY ./.zshrc  /home/$USERNAME/
-
-RUN echo "===> Installing Python Packages tools... "
-RUN /home/$USERNAME/.poetry/bin/poetry config virtualenvs.create false
-# Setting up user access
+COPY .zshrc  /home/$USERNAME/
 USER root
-WORKDIR /root
-RUN echo "===> Setting up development user sudo access..." \
-    # Add sudo support for non-root user
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME
-RUN chown -fR $USERNAME:$USERNAME /home/$USERNAME \
-    && echo "===> Cleaning up package list..." \
-    && apt-get autoremove -y \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -fR /root/*.txt \
-    && rm -fR /app
-
-
-
-
+RUN chown -fR $USERNAME:$USERNAME /home/$USERNAME
