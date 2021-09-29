@@ -11,7 +11,7 @@
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU Affero General Public License for more details.
-FROM node:lts-alpine
+FROM node:lts-alpine3.14
 LABEL author="Pat McLean" \
       maintainer="Pat McLean<github@psmware.ie>"
 # Avoid warnings by switching to noninteractive
@@ -28,7 +28,7 @@ RUN apk --no-cache upgrade && apk add --no-cache --virtual .build-deps \
     curl \
     vim \
     shadow \
-    openssh-client..
+    openssh-client
 RUN echo "===> Moving node user and group..." \
     && groupmod -g 1001 node \
     && usermod -u 1001 node

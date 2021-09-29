@@ -63,6 +63,3 @@ fi
 if [ -d "$HOME/.local/bin" ] ; then
     PATH="$HOME/.local/bin:$PATH"
 fi
-if [ -d "$HOME/.poetry/bin" ] ; then
-    PATH="$HOME/.poetry/bin:$PATH"
-fi
